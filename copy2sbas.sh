@@ -10,6 +10,8 @@ do
     mkdir -p $to_dir/$folder_name
     cp -u "$d/unwrap.grd" "$to_dir/$folder_name"
     cp -u "$d/corr.grd" "$to_dir/$folder_name"
+    cp -u "$d/phasefilt.grd" "$to_dir/$folder_name"
+    cp -u "$d/mask.grd" "$to_dir/$folder_name"
 done
 echo "copy to: $to_dir"
 
