@@ -1,2 +1,4 @@
 prepare file for SBAS analysis for some individual device.
-
+##run
+put script into ./merge and run$python copy_grd_file.py
+create SBAS and file in there
