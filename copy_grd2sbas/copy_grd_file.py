@@ -1,56 +1,55 @@
 import os
 import shutil
-from datetime import datetime
 
-# 获取当前目录
-current_dir = os.getcwd()
+merge_dir = 'merge'
+sbas_dir = 'SBAS'
 
-# 指定merge目录路径
-merge_dir = os.path.join(current_dir, "merge")
-
-# 指定SBAS目录路径
-sbas_dir = os.path.join(current_dir, "SBAS")
-
-# 创建SBAS目录
+# 创建 SBAS 目录
 os.makedirs(sbas_dir, exist_ok=True)
 
-# 遍历merge目录下的子目录
-for subdir in os.listdir(merge_dir):
-    subdir_path = os.path.join(merge_dir, subdir)
-    
-    # 确保子目录为目录且非隐藏目录
-    if os.path.isdir(subdir_path) and not subdir.startswith('.'):
-        
-        # 获取子目录下的corr.grd和unwrap.grd文件路径
-        corr_file = os.path.join(subdir_path, "corr.grd")
-        unwrap_file = os.path.join(subdir_path, "unwrap.grd")
-        
-        # 确保corr.grd和unwrap.grd文件存在
-        if os.path.isfile(corr_file) and os.path.isfile(unwrap_file):
-            
-            # 拷贝corr.grd和unwrap.grd文件到merge目录
-            shutil.copy2(corr_file, merge_dir)
-            shutil.copy2(unwrap_file, merge_dir)
-            
-            # 输出复制的文件路径
-            print(f"复制文件 {corr_file} 和 {unwrap_file} 到目录 {merge_dir}")
-            
-            # 解析子目录名称为日期时间
-            try:
-                date_str = subdir.split("_")[-1]
-                date = datetime.strptime(date_str, "%Y%m%d")
-                
-                # 拷贝corr.grd和unwrap.grd文件到SBAS目录，并按照原来的时间目录命名
-                sbas_subdir = os.path.join(sbas_dir, subdir)
-                os.makedirs(sbas_subdir, exist_ok=True)
-                shutil.copy2(corr_file, sbas_subdir)
-                shutil.copy2(unwrap_file, sbas_subdir)
-                
-                # 输出复制的文件路径
-                print(f"复制文件 {corr_file} 和 {unwrap_file} 到目录 {sbas_subdir}")
-            
-            except ValueError:
-                print(f"无法解析目录 {subdir_path} 的日期时间")
-                
-        else:
-            print(f"目录 {subdir_path} 中缺少corr.grd或unwrap.grd文件")
+# 获取 merge 目录中的时间对目录列表
+time_dirs = [d for d in os.listdir(merge_dir) if os.path.isdir(os.path.join(merge_dir, d))]
+
+# 记录拷贝过程中不存在的目录
+missing_dirs = []
+
+# 拷贝文件到 merge 目录
+for i, time_dir in enumerate(time_dirs, 1):
+    corr_grd_file = os.path.join(merge_dir, time_dir, 'corr.grd')
+    unwrap_grd_file = os.path.join(merge_dir, time_dir, 'unwrap.grd')
+
+    if os.path.exists(corr_grd_file):
+        shutil.copy(corr_grd_file, merge_dir)
+    else:
+        missing_dirs.append(os.path.join(merge_dir, time_dir))
+        continue
+
+    if os.path.exists(unwrap_grd_file):
+        shutil.copy(unwrap_grd_file, merge_dir)
+    else:
+        missing_dirs.append(os.path.join(merge_dir, time_dir))
+        continue
+
+    # 创建 SBAS 目录中的时间对目录，并按照原时间目录命名
+    sbas_time_dir = os.path.join(sbas_dir, time_dir)
+    os.makedirs(sbas_time_dir, exist_ok=True)
+
+    # 将文件拷贝到 SBAS 目录中的时间对目录
+    shutil.copy(corr_grd_file, sbas_time_dir)
+    shutil.copy(unwrap_grd_file, sbas_time_dir)
+
+    # 打印拷贝进度
+    print(f"拷贝进度: {i}/{len(time_dirs)}")
+
+# 核对时间对数量
+merge_time_dirs = len(time_dirs)
+sbas_time_dirs = len(os.listdir(sbas_dir))
+
+print(f"原来的 merge 目录中的时间对数量: {merge_time_dirs}")
+print(f"新拷贝到 SBAS 目录中新建时间对目录数量: {sbas_time_dirs}")
+
+# 输出不存在的目录信息
+if missing_dirs:
+    print("以下目录中的 corr.grd 或 unwrap.grd 文件不存在:")
+    for missing_dir in missing_dirs:
+        print(missing_dir)
